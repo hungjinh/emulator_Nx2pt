@@ -1,0 +1,31 @@
+# specific ignore files for this repo
+*.npy
+*.pkl
+
+
+# Compiled source
+*.o
+*.out
+*.so
+*.exe
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+
+# python 
+build
+dist
+*.egg*
+__pycache__
+*.pyc
+
+# vscode
+.vscode
+
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+*~
