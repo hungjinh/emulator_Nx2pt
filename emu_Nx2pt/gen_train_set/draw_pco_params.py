@@ -4,22 +4,7 @@ import time
 import argparse
 import pickle
 
-
-def rescale(arr_in, range_out, range_in=[0., 1.]):
-
-    span_in = range_in[1]-range_in[0]
-    span_out = range_out[1]-range_out[0]
-    ratio = span_out/span_in
-    mean_in = (range_in[1]+range_in[0])/2.*ratio
-    mean_out = (range_out[1]+range_out[0])/2.
-
-    arr_out = arr_in*ratio
-    arr_out += (mean_out-mean_in)
-
-    return arr_out
-
-
-def draw_lhs_samples(Npts, par_lim, criterion='cm'):
+def draw_lhs_samples(Npts, par_lim, criterion='cm', par_keys=None):
     '''
     criterion: a string that tells lhs how to sample the points (default: None, which simply randomizes the points within the intervals):
         “center” or “c”: center the points within the sampling intervals
@@ -27,21 +12,26 @@ def draw_lhs_samples(Npts, par_lim, criterion='cm'):
         “centermaximin” or “cm”: same as “maximin”, but centered within the intervals
         “correlation” or “corr”: minimize the maximum correlation coefficient
     '''
+
+    if not par_keys:
+        par_keys = par_lim.keys()
+
     Ndim = len(par_lim)
 
-    start = time.time()
-    samples_ori = lhs(Ndim, samples=Npts, criterion=criterion)
-    end = time.time()
-    period = (end - start)/60.
-    print(f'lhs finished in {period} mins')
+    domain = np.zeros((2, Ndim))
+    for i, key in enumerate(par_keys):
+        domain[0][i] = par_lim[key][0]
+        domain[1][i] = par_lim[key][1]
 
-    samples_tuned = {}
-    for j, key in enumerate(par_lim.keys()):
+    #start = time.time()
+    samples = lhs(Ndim, samples=Npts, criterion=criterion)
+    #end = time.time()
+    #period = (end - start)/60.
+    #print(f'lhs finished: {period} mins')
 
-        samples_tuned[key] = rescale(
-            arr_in=samples_ori[:, j], range_out=par_lim[key])
+    samples = domain[0] + samples * (domain[1] - domain[0])
 
-    return samples_tuned
+    return samples
 
 
 def main(args=None):
@@ -67,10 +57,10 @@ def main(args=None):
         'h': [0.6, 0.8],
     }
 
-    pco_samples = draw_lhs_samples(Npts=Npts, par_lim=par_lim)
+    pco_samples = draw_lhs_samples(Npts=Npts, par_lim=par_lim, par_keys=['Omega_m', 'sigma_8', 'Omega_b', 'n_s', 'h'])
 
     data_dir = '/home/hhg/Research/emu_Nx2pt/data/'
-    filename = data_dir+f'pco_train_{Npts}.pkl'
+    filename = data_dir+f'pco_m8bnh_{Npts}.pkl'
     print(f'--- Output pco_samples to: ---', filename)
 
     with open(filename, 'wb') as handle:
