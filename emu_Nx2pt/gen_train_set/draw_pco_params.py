@@ -4,7 +4,11 @@ import time
 import argparse
 import pickle
 
-def draw_lhs_samples(Npts, par_lim, criterion='cm', par_keys=None):
+def rescale(arr_in, domain):
+    return domain[0] + arr_in * (domain[1]-domain[0])
+
+
+def draw_lhs_samples(Npts, par_lim, criterion='c'):
     '''
     criterion: a string that tells lhs how to sample the points (default: None, which simply randomizes the points within the intervals):
         “center” or “c”: center the points within the sampling intervals
@@ -13,15 +17,7 @@ def draw_lhs_samples(Npts, par_lim, criterion='cm', par_keys=None):
         “correlation” or “corr”: minimize the maximum correlation coefficient
     '''
 
-    if not par_keys:
-        par_keys = par_lim.keys()
-
     Ndim = len(par_lim)
-
-    domain = np.zeros((2, Ndim))
-    for i, key in enumerate(par_keys):
-        domain[0][i] = par_lim[key][0]
-        domain[1][i] = par_lim[key][1]
 
     #start = time.time()
     samples = lhs(Ndim, samples=Npts, criterion=criterion)
@@ -29,9 +25,11 @@ def draw_lhs_samples(Npts, par_lim, criterion='cm', par_keys=None):
     #period = (end - start)/60.
     #print(f'lhs finished: {period} mins')
 
-    samples = domain[0] + samples * (domain[1] - domain[0])
+    samples_dict = {}
+    for j, key in enumerate(par_lim.keys()):
+        samples_dict[key] = rescale(arr_in=samples[:, j], domain=par_lim[key])
 
-    return samples
+    return samples_dict
 
 
 def main(args=None):
@@ -57,10 +55,10 @@ def main(args=None):
         'h': [0.6, 0.8],
     }
 
-    pco_samples = draw_lhs_samples(Npts=Npts, par_lim=par_lim, par_keys=['Omega_m', 'sigma_8', 'Omega_b', 'n_s', 'h'])
+    pco_samples = draw_lhs_samples(Npts=Npts, par_lim=par_lim)
 
     data_dir = '/home/hhg/Research/emu_Nx2pt/data/'
-    filename = data_dir+f'pco_m8bnh_{Npts}.pkl'
+    filename = data_dir+f'pco_train_{Npts}.pkl'
     print(f'--- Output pco_samples to: ---', filename)
 
     with open(filename, 'wb') as handle:
