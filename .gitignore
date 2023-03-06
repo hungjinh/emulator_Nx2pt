@@ -2,6 +2,9 @@
 *.npy
 *.pkl
 
+experiments/*
+configs/*
+!configs/mlp_test.yaml
 
 # Compiled source
 *.o
