@@ -149,7 +149,14 @@ class MLP_Emulator(BaseTrainer):
         print(f'\nMinimum (epoch-averaged) validation loss reached at epoch {self.best_epochID+1}.')
     
     def gen_dataT(self, pco):
-        '''Generate decorrelated dataT given pco'''
+        '''Generate decorrelated dataT given pco
+
+        Args:
+            pco (torch.Tensor): cosmological parameters 
+        
+        Returns:
+            np.array: emulated decorrelated dataT 
+        '''
 
         with torch.no_grad():
             emu_dataT = self.model(pco).to('cpu').numpy()
@@ -163,12 +170,20 @@ class MLP_Emulator(BaseTrainer):
         mask_float = np.loadtxt(self.file_mask)[:, 1]
         mask = mask_float.astype(bool)
 
-        cov_masked = cov_full[mask][:, mask]
+        self.cov_masked = cov_full[mask][:, mask]
 
-        self.L = np.linalg.cholesky(cov_masked)
+        self.L = np.linalg.cholesky(self.cov_masked)
         self.invL = np.linalg.inv(self.L)
 
     def gen_dataV(self, pco):
+        '''Generate emulated dataV given pco
+
+        Args:
+            pco (torch.Tensor): cosmological parameters 
+        
+        Returns:
+            np.array: emulated data vector (can directly compare with CosmoLike)
+        '''
         
         dataT = self.gen_dataT(pco)
         dataV = self.L@dataT
