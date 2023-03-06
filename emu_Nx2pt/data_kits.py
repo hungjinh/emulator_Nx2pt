@@ -15,7 +15,7 @@ class dataTDataset(Dataset):
         pcoID = self.IDs[index]
         dataT = torch.load( os.path.join(self.dir_dataT, 'dataT_'+str(pcoID)+'.pt') )
         pco = torch.from_numpy(self.df_pco.loc[[pcoID]].values[0]).float()
-        return pco, dataT
+        return pcoID, pco, dataT
     
     def __len__(self):
         return len(self.IDs)

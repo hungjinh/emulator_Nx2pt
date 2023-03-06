@@ -58,7 +58,7 @@ class MLP_Emulator(BaseTrainer):
     def _get_Npco_Nout(self):
         '''Getting the dimensions of inputs and outputs from the training examples'''
         validSamples = iter(self.dataloader['valid'])
-        pco, datav = validSamples.next()
+        _, pco, datav = validSamples.next()
         self.Nout = len(datav[0])
         self.Npco = pco.shape[1]
     
@@ -85,7 +85,7 @@ class MLP_Emulator(BaseTrainer):
                 self.model.eval()
             
             running_loss = 0.0
-            for i, (inputs, labels) in enumerate(self.dataloader[phase]):
+            for i, (_, inputs, labels) in enumerate(self.dataloader[phase]):
                 inputs = inputs.to(self.device)
                 labels = labels.to(self.device)
 
