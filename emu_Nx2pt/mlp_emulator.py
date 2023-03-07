@@ -144,7 +144,7 @@ class MLP_Emulator(BaseTrainer):
             print(f'\tTime: {time_cost//60:.0f}m {time_cost%60:.0f}s')    
 
             if self.curr_epochID - self.best_epochID >= self.early_stop_threshold:
-                print(f'Early stopping... (Model did not imporve after {self.early_stop_threshold} epochs)')
+                print(f'Early stopping... (Model did not improve after {self.early_stop_threshold} epochs)')
                 break
         
         print(f'\nMinimum (epoch-averaged) validation loss reached at epoch {self.best_epochID+1}.')
