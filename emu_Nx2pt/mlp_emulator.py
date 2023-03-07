@@ -41,15 +41,16 @@ class MLP_Emulator(BaseTrainer):
         self.Nsamples = len(self.df_pco['Omega_m'])
         sampleID = list(range(self.Nsamples))
 
-        trainID, validID = train_test_split(sampleID, train_size=self.f_train, random_state=self.seed)
+        self.IDs = {}
+        self.IDs['train'], self.IDs['valid'] = train_test_split(sampleID, train_size=self.f_train, random_state=self.seed)
 
         self.dataset = {} 
-        self.dataset['train'] = dataTDataset(trainID, self.df_pco, self.dir_dataT)
-        self.dataset['valid'] = dataTDataset(validID, self.df_pco, self.dir_dataT)
+        self.dataset['train'] = dataTDataset(self.IDs['train'], self.df_pco, self.dir_dataT)
+        self.dataset['valid'] = dataTDataset(self.IDs['valid'], self.df_pco, self.dir_dataT)
 
         self.dataloader = {}
-        self.dataloader['train'] = DataLoader(self.dataset['train'], batch_size=self.batch_size, shuffle=True)
-        self.dataloader['valid'] = DataLoader(self.dataset['valid'], batch_size=self.batch_size, shuffle=True)
+        self.dataloader['train'] = DataLoader(self.dataset['train'], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
+        self.dataloader['valid'] = DataLoader(self.dataset['valid'], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
 
         print('\n------ Prepare Data ------\n')
         for key in ['train', 'valid']:
