@@ -12,6 +12,7 @@ def main(args=None):
             run a test (on yoda)
             >> cd /home/hhg/Research/emu_Nx2pt/repo/emulator_Nx2pt/
             >> python3 scripts/train_MLP_emulator.py --config configs/mlp_test.yaml > experiments/logs/mlp_test.log
+            >> python3 scripts/train_MLP_emulator.py --config configs/mlp_run0.yaml > experiments/logs/mlp_run0.log
     '''
     import argparse
 
