@@ -61,9 +61,13 @@ class BaseTrainer():
         outfile_statInfo = os.path.join(self.dir_checkpoints, f'stateInfo_{epochID}.pth')
         torch.save(self.statInfo, outfile_statInfo)
 
-    def load_checkpoint(self, epochID):
-
-        statInfo = torch.load(os.path.join(self.dir_checkpoints, f'stateInfo_{epochID}.pth'))
+    def load_checkpoint(self, epochID=None):
+        
         trainInfo = torch.load(self.file_trainInfo)
 
-        return statInfo, trainInfo
+        if epochID:
+            statInfo = torch.load(os.path.join(self.dir_checkpoints, f'stateInfo_{epochID}.pth'))
+            
+            return trainInfo, statInfo
+        else:
+            return trainInfo

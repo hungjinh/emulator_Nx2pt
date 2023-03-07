@@ -148,6 +148,46 @@ class MLP_Emulator(BaseTrainer):
         
         print(f'\nMinimum (epoch-averaged) validation loss reached at epoch {self.best_epochID+1}.')
     
+    def run_test_loop(self, dataloader):
+
+        print('\n------ Run test loop ------\n')
+        print(f'  Number of galaxies: {len(dataloader.dataset)} ({len(dataloader)} batches)')
+
+        self.model.eval()
+        running_loss = 0.0
+        for _, inputs, labels in dataloader:
+            inputs = inputs.to(self.device)
+            labels = labels.to(self.device)
+
+            with torch.no_grad():
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, labels)
+            
+            running_loss += loss.item()
+        
+        avg_test_chi2 = running_loss / len(dataloader.dataset)
+
+        print(f'  Average chi2 of the test set: {avg_test_chi2:.2f}')
+
+        return avg_test_chi2
+    
+    def test(self, dataloader, epochID=None):
+        '''Test the model at given epochID on the given dataset. 
+            If epochID is not specified, use the best-trained model.
+        '''
+
+        if epochID:
+            trainInfo, statInfo = self.load_checkpoint(epochID)
+            self.model.load_state_dict(statInfo['model_state_dict'])
+        else:
+            trainInfo = self.load_checkpoint()
+            self.model.load_state_dict(trainInfo['best_model_wts'])
+        
+        avg_test_chi2 = self.run_test_loop(dataloader)
+
+        return avg_test_chi2
+
+    
     def gen_dataT(self, pco):
         '''Generate decorrelated dataT given pco
 
