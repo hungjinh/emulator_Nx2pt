@@ -18,6 +18,9 @@ class BaseTrainer():
         self.cuda = self.is_cuda & self.cuda
         self.device = torch.device(f'cuda:{self.gpu_device}' if self.cuda else "cpu")
 
+        print('\n------ Device ------\n')
+        print(self.device)
+
         self.dir_exp = os.path.join(self.dir_output, self.exp_name)
         self.dir_checkpoints = os.path.join(self.dir_exp, 'checkpoints')
         self.file_trainInfo = os.path.join(self.dir_exp, 'trainInfo.pkl')
