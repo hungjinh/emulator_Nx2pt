@@ -1,0 +1,31 @@
+exp_name     : mlp_test
+
+cuda         : True
+ngpu         : 1
+gpu_device   : 0
+workers      : 2
+
+dir_output   : /home/hhg/Research/emu_Nx2pt/repo/emulator_Nx2pt/experiments
+dir_dataT    : /home/hhg/Research/emu_Nx2pt/data/train_1M/
+
+filename_pco : /home/hhg/Research/emu_Nx2pt/data/pco_train_1000000.pkl    # training pco points on lhs
+startID      : 0         # specify the ID range [startID, endID) of the traning set used in training+validation. 
+endID        : 10000   
+f_train      : 0.7       # fraction of training (f_train) v.s validation (1-f_train) splits within the training examples  
+seed         : 3         # radnom seed for train-valid-test splits
+
+Nhidden      : 64        # the dimension of each middle network block
+Nblocks      : 2         # number of middle network blocks
+
+num_epochs : 10     # (100)
+batch_size : 64     # (64)
+lr         : 0.01            # Learning rate
+beta1      : 0.5             # Beta1 hyperparam for Adam optimizers
+beta2      : 0.999           # Beta2 hyperparam for Adam optimizers
+
+step_size  : 5               # period of learning rate decay 
+gamma      : 0.1             # multiplicative factor of learning rate decay
+early_stop_threshold : 10    # auto stop when the valid_loss doesn't improve anymore for <early_stop_threshold> epochs.
+
+file_cov   : /home/hhg/Research/emu_Nx2pt/data/cov3500.pkl
+file_mask  : /home/hhg/Research/emu_Nx2pt/data/10x2pt_RomanxSO_fid_mask.txt
