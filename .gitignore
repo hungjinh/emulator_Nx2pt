@@ -3,10 +3,12 @@
 *.pkl
 
 experiments/*
+
 configs/*
 !configs/mlp_test.yaml
 
 notebooks/*
+!notebooks/tools
 
 # Compiled source
 *.o
