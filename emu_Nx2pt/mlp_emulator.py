@@ -204,10 +204,12 @@ class MLP_Emulator(BaseTrainer):
         '''
 
         if epochID:
+            print('Test model with the model at epochID:', epochID)
             trainInfo, statInfo = self.load_checkpoint(epochID)
             self.model.load_state_dict(statInfo['model_state_dict'])
         else:
             trainInfo = self.load_checkpoint()
+            print('Test model with the best-trained model at epochID:', trainInfo['best_epochID'])
             self.model.load_state_dict(trainInfo['best_model_wts'])
         
         avg_test_chi2 = self.run_test_loop(dataloader)
