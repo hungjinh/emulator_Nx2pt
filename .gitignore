@@ -6,6 +6,8 @@ experiments/*
 configs/*
 !configs/mlp_test.yaml
 
+notebooks/*
+
 # Compiled source
 *.o
 *.out
