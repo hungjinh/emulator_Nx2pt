@@ -15,6 +15,8 @@ file_pco :
     train : /home/hhg/Research/emu_Nx2pt/data/pco_1M.pkl    # training pco points on lhs
     valid : /home/hhg/Research/emu_Nx2pt/data/pco_0.1M.pkl
 
+#file_model_state : /home/hhg/Research/emu_Nx2pt/repo/emulator_Nx2pt/experiments/mlp_run0/trainInfo.pkl  # null if training from scratch
+file_model_state : null  # null if training from scratch
 
 startID      : 0         # specify the ID range [startID, endID) of the 10x2p dataT used in training
 endID        : 2425      # 3x2pt: 2425  / full 10x2pt: 3132 
@@ -28,7 +30,7 @@ lr         : 0.001           # Learning rate
 beta1      : 0.5             # Beta1 hyperparam for Adam optimizers
 beta2      : 0.999           # Beta2 hyperparam for Adam optimizers
 
-step_size  : 5               # period of learning rate decay 
+step_size  : 10              # period of learning rate decay 
 gamma      : 0.1             # multiplicative factor of learning rate decay
 early_stop_threshold : 10    # auto stop when the valid_loss doesn't improve anymore for <early_stop_threshold> epochs.
 

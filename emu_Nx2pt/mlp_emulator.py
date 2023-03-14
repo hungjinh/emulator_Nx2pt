@@ -25,7 +25,7 @@ class MLP_Emulator(BaseTrainer):
         super().__init__(config)
         self._prepare_data()
         self._get_Npco_Nout()
-        self._build_model()
+        self._build_model(file_model_state=self.file_model_state)
         self._define_loss()
         self._init_optimizer()
 
@@ -61,12 +61,19 @@ class MLP_Emulator(BaseTrainer):
         self.Nout = len(datav[0])
         self.Npco = pco.shape[1]
     
-    def _build_model(self):
+    def _build_model(self, file_model_state=None):
         self.model = MLP(self.Npco, self.Nout, self.Nblocks, self.Nhidden).to(self.device)
 
         print('\n------ Build Model ------\n')
         print(self.model, '\n')
         print('Number of trainable parameters:', sum(param.numel() for param in self.model.parameters() if param.requires_grad))
+
+        if file_model_state:
+            trainInfo = torch.load(file_model_state)
+            print('... Load previously best trained parameters to model.')
+            self.model.load_state_dict(trainInfo['best_model_wts'])
+        else:
+            print('... Initialized model with random parameters.')
 
     def _define_loss(self):
         self.criterion = ChiSquare()
