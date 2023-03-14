@@ -32,25 +32,22 @@ class MLP_Emulator(BaseTrainer):
         self.compute_L()
     
     def _prepare_data(self):
-
-        with open(self.filename_pco, 'rb') as handle:
-            pco_samples = pickle.load(handle)
-
-        self.df_pco = pd.DataFrame(pco_samples).iloc[self.startID:self.endID]
-    
-        self.Nsamples = len(self.df_pco['Omega_m'])
-        sampleID = list(range(self.Nsamples))
-
-        self.IDs = {}
-        self.IDs['train'], self.IDs['valid'] = train_test_split(sampleID, train_size=self.f_train, random_state=self.seed)
-
+        
+        pco = {}
+        self.df_pco = {}
         self.dataset = {} 
-        self.dataset['train'] = dataTDataset(self.IDs['train'], self.df_pco, self.dir_dataT)
-        self.dataset['valid'] = dataTDataset(self.IDs['valid'], self.df_pco, self.dir_dataT)
-
         self.dataloader = {}
-        self.dataloader['train'] = DataLoader(self.dataset['train'], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
-        self.dataloader['valid'] = DataLoader(self.dataset['valid'], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
+
+        for key in ['train', 'valid']:
+
+            with open(self.file_pco[key], 'rb') as handle:
+                pco[key] = pickle.load(handle)
+            
+            self.df_pco[key] = pd.DataFrame(pco[key])
+
+            self.dataset[key] = dataTDataset(self.df_pco[key], self.dir_dataT[key], self.startID, self.endID)
+
+            self.dataloader[key] = DataLoader(self.dataset[key], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
 
         print('\n------ Prepare Data ------\n')
         for key in ['train', 'valid']:

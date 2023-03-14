@@ -6,13 +6,18 @@ gpu_device   : 0
 workers      : 2
 
 dir_output   : /home/hhg/Research/emu_Nx2pt/repo/emulator_Nx2pt/experiments
-dir_dataT    : /home/hhg/Research/emu_Nx2pt/data/train_1M/
 
-filename_pco : /home/hhg/Research/emu_Nx2pt/data/pco_train_1000000.pkl    # training pco points on lhs
-startID      : 0         # specify the ID range [startID, endID) of the traning set used in training+validation. 
-endID        : 10000   
-f_train      : 0.7       # fraction of training (f_train) v.s validation (1-f_train) splits within the training examples  
-seed         : 3         # radnom seed for train-valid-test splits
+dir_dataT :
+    train : /home/hhg/Research/emu_Nx2pt/data/train_1M/
+    valid : /home/hhg/Research/emu_Nx2pt/data/valid_0.1M/
+
+file_pco :
+    train : /home/hhg/Research/emu_Nx2pt/data/pco_train_1000000.pkl # training pco points on lhs
+    valid : /home/hhg/Research/emu_Nx2pt/data/pco_valid_100000.pkl
+
+
+startID      : 0         # specify the ID range [startID, endID) of the 10x2p dataT used in training
+endID        : 2425      # 3x2pt: 2425  / full 10x2pt: 3132 
 
 Nhidden      : 64        # the dimension of each middle network block
 Nblocks      : 2         # number of middle network blocks
