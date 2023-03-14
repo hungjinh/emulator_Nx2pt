@@ -76,49 +76,66 @@ class MLP_Emulator(BaseTrainer):
 
     def _train_one_epoch(self):
         
-        for phase in ['train', 'valid']:
-            if phase == 'train': 
-                self.model.train()
-            else:
-                self.model.eval()
-            
-            running_loss = 0.0
-            for i, (_, inputs, labels) in enumerate(self.dataloader[phase]):
-                inputs = inputs.to(self.device)
-                labels = labels.to(self.device)
+        self.model.train()
+                    
+        running_loss = 0.0
+        for i, (_, inputs, labels) in enumerate(self.dataloader['train']):
+            inputs = inputs.to(self.device)
+            labels = labels.to(self.device)
 
-                self.optimizer.zero_grad()
+            self.optimizer.zero_grad()
 
-                # track history if only in train
-                with torch.set_grad_enabled(phase == 'train'):
-                    outputs = self.model(inputs)
-                    loss = self.criterion(outputs, labels)
+            with torch.set_grad_enabled(True):
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, labels)
 
-                    if phase == 'train':
-                        loss.backward()
-                        self.optimizer.step()
+                loss.backward()
+                self.optimizer.step()
                 
-                self.trainInfo[f'{phase}_loss'].append( loss.item()/inputs.size(0) )
+            self.trainInfo[f'train_loss'].append( loss.item()/inputs.size(0) )
 
-                running_loss += loss.item()
+            running_loss += loss.item()
 
-            # ------ End training the epoch in a train or valid phase ------
-            epoch_loss = running_loss / len(self.dataset[phase])
-            self.trainInfo[f'epoch_{phase}_loss'].append(epoch_loss)
+        # ------ Finished the whole training epoch ------
+        epoch_loss = running_loss / len(self.dataset['train'])
+        self.trainInfo[f'epoch_train_loss'].append(epoch_loss)
             
-            print(f'\t{phase} avg_chi2: {epoch_loss:.2f}', end='')
+        print(f'\ttrain avg_chi2: {epoch_loss:.2f}', end='')
 
-            if phase == 'train':
-                self.scheduler.step()
-            
-            if phase == 'valid':
-                if epoch_loss < self.min_valid_loss: # -> deep copy the model
-                    self.best_epochID = self.curr_epochID
-                    self.min_valid_loss = epoch_loss
-                    self.best_model_wts = copy.deepcopy(self.model.state_dict())
-            
-        # ------ End training the ephch in both train & valid phases ------
         self.trainInfo['lr'].append(self.scheduler.get_last_lr()[0]) # save lr / epoch
+        
+        self.scheduler.step()
+
+
+    def _valid_one_epoch(self):
+
+        self.model.eval()
+
+        running_loss = 0.0
+        for i, (_, inputs, labels) in enumerate(self.dataloader['valid']):
+            
+            inputs = inputs.to(self.device)
+            labels = labels.to(self.device)
+
+            with torch.no_grad():
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, labels)
+
+            self.trainInfo['valid_loss'].append( loss.item()/inputs.size(0) )
+
+            running_loss += loss.item()
+
+        # ------ Finished the whole validating epoch ------
+        epoch_loss = running_loss / len(self.dataset['valid'])
+        self.trainInfo['epoch_valid_loss'].append(epoch_loss)
+        
+        print(f'\tvalid avg_chi2: {epoch_loss:.2f}', end='')
+
+        if epoch_loss < self.min_valid_loss: # -> deep copy the model
+            self.best_epochID = self.curr_epochID
+            self.min_valid_loss = epoch_loss
+            self.best_model_wts = copy.deepcopy(self.model.state_dict())
+
 
     def train(self):
 
@@ -134,7 +151,10 @@ class MLP_Emulator(BaseTrainer):
             print(f'--- Epoch {epochID+1}/{self.num_epochs} ---')
             
             since = time.time()
+
             self._train_one_epoch()
+            self._valid_one_epoch()
+
             self._save_checkpoint(epochID)
 
             time_cost = time.time() - since
@@ -209,8 +229,9 @@ class MLP_Emulator(BaseTrainer):
         mask = mask_float.astype(bool)
 
         self.cov_masked = cov_full[mask][:, mask]
+        self.cov_cut = self.cov_masked[self.startID:self.endID][:, self.startID:self.endID]
 
-        self.L = np.linalg.cholesky(self.cov_masked)
+        self.L = np.linalg.cholesky(self.cov_cut)
         self.invL = np.linalg.inv(self.L)
 
     def gen_dataV(self, pco):

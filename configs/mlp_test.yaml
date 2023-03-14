@@ -3,17 +3,17 @@ exp_name     : mlp_test
 cuda         : True
 ngpu         : 1
 gpu_device   : 0
-workers      : 2
+workers      : 8
 
 dir_output   : /home/hhg/Research/emu_Nx2pt/repo/emulator_Nx2pt/experiments
 
 dir_dataT :
-    train : /home/hhg/Research/emu_Nx2pt/data/train_1M/
-    valid : /home/hhg/Research/emu_Nx2pt/data/valid_0.1M/
+    train : /home/hhg/Research/emu_Nx2pt/data/dataT_1M/
+    valid : /home/hhg/Research/emu_Nx2pt/data/dataT_0.1M/
 
 file_pco :
-    train : /home/hhg/Research/emu_Nx2pt/data/pco_train_1000000.pkl # training pco points on lhs
-    valid : /home/hhg/Research/emu_Nx2pt/data/pco_valid_100000.pkl
+    train : /home/hhg/Research/emu_Nx2pt/data/pco_1M.pkl    # training pco points on lhs
+    valid : /home/hhg/Research/emu_Nx2pt/data/pco_0.1M.pkl
 
 
 startID      : 0         # specify the ID range [startID, endID) of the 10x2p dataT used in training
@@ -23,8 +23,8 @@ Nhidden      : 64        # the dimension of each middle network block
 Nblocks      : 2         # number of middle network blocks
 
 num_epochs : 10     # (100)
-batch_size : 64     # (64)
-lr         : 0.01            # Learning rate
+batch_size : 128    # (64)
+lr         : 0.001           # Learning rate
 beta1      : 0.5             # Beta1 hyperparam for Adam optimizers
 beta2      : 0.999           # Beta2 hyperparam for Adam optimizers
 
