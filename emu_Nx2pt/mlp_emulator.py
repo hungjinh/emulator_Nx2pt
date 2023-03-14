@@ -49,6 +49,7 @@ class MLP_Emulator(BaseTrainer):
 
             self.dataloader[key] = DataLoader(self.dataset[key], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
 
+
         print('\n------ Prepare Data ------\n')
         for key in ['train', 'valid']:
             print(f'Number of {key} samples: {len(self.dataset[key])} ({len(self.dataloader[key])} batches)')
@@ -135,6 +136,7 @@ class MLP_Emulator(BaseTrainer):
             self.best_epochID = self.curr_epochID
             self.min_valid_loss = epoch_loss
             self.best_model_wts = copy.deepcopy(self.model.state_dict())
+
 
 
     def train(self):
@@ -232,6 +234,7 @@ class MLP_Emulator(BaseTrainer):
         self.cov_cut = self.cov_masked[self.startID:self.endID][:, self.startID:self.endID]
 
         self.L = np.linalg.cholesky(self.cov_cut)
+
         self.invL = np.linalg.inv(self.L)
 
     def gen_dataV(self, pco):
