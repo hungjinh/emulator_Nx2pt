@@ -72,7 +72,7 @@ def main(args=None):
     pco_samples = draw_lhs_samples(Npts=Npts, par_lim=par_lim)
 
     data_dir = '/home/hhg/Research/emu_Nx2pt/data/'
-    filename = data_dir+f'pco_train_{Npts}.pkl'
+    filename = data_dir+f'pco_valid_{Npts}.pkl'
     print(f'--- Output pco_samples to: ---', filename)
 
     with open(filename, 'wb') as handle:

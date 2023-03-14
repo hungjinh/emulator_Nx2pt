@@ -32,25 +32,23 @@ class MLP_Emulator(BaseTrainer):
         self.compute_L()
     
     def _prepare_data(self):
-
-        with open(self.filename_pco, 'rb') as handle:
-            pco_samples = pickle.load(handle)
-
-        self.df_pco = pd.DataFrame(pco_samples).iloc[self.startID:self.endID]
-    
-        self.Nsamples = len(self.df_pco['Omega_m'])
-        sampleID = list(range(self.Nsamples))
-
-        self.IDs = {}
-        self.IDs['train'], self.IDs['valid'] = train_test_split(sampleID, train_size=self.f_train, random_state=self.seed)
-
+        
+        pco = {}
+        self.df_pco = {}
         self.dataset = {} 
-        self.dataset['train'] = dataTDataset(self.IDs['train'], self.df_pco, self.dir_dataT)
-        self.dataset['valid'] = dataTDataset(self.IDs['valid'], self.df_pco, self.dir_dataT)
-
         self.dataloader = {}
-        self.dataloader['train'] = DataLoader(self.dataset['train'], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
-        self.dataloader['valid'] = DataLoader(self.dataset['valid'], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
+
+        for key in ['train', 'valid']:
+
+            with open(self.file_pco[key], 'rb') as handle:
+                pco[key] = pickle.load(handle)
+            
+            self.df_pco[key] = pd.DataFrame(pco[key])
+
+            self.dataset[key] = dataTDataset(self.df_pco[key], self.dir_dataT[key], self.startID, self.endID)
+
+            self.dataloader[key] = DataLoader(self.dataset[key], batch_size=self.batch_size, shuffle=True, num_workers=self.workers)
+
 
         print('\n------ Prepare Data ------\n')
         for key in ['train', 'valid']:
@@ -79,49 +77,67 @@ class MLP_Emulator(BaseTrainer):
 
     def _train_one_epoch(self):
         
-        for phase in ['train', 'valid']:
-            if phase == 'train': 
-                self.model.train()
-            else:
-                self.model.eval()
-            
-            running_loss = 0.0
-            for i, (_, inputs, labels) in enumerate(self.dataloader[phase]):
-                inputs = inputs.to(self.device)
-                labels = labels.to(self.device)
+        self.model.train()
+                    
+        running_loss = 0.0
+        for i, (_, inputs, labels) in enumerate(self.dataloader['train']):
+            inputs = inputs.to(self.device)
+            labels = labels.to(self.device)
 
-                self.optimizer.zero_grad()
+            self.optimizer.zero_grad()
 
-                # track history if only in train
-                with torch.set_grad_enabled(phase == 'train'):
-                    outputs = self.model(inputs)
-                    loss = self.criterion(outputs, labels)
+            with torch.set_grad_enabled(True):
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, labels)
 
-                    if phase == 'train':
-                        loss.backward()
-                        self.optimizer.step()
+                loss.backward()
+                self.optimizer.step()
                 
-                self.trainInfo[f'{phase}_loss'].append( loss.item()/inputs.size(0) )
+            self.trainInfo[f'train_loss'].append( loss.item()/inputs.size(0) )
 
-                running_loss += loss.item()
+            running_loss += loss.item()
 
-            # ------ End training the epoch in a train or valid phase ------
-            epoch_loss = running_loss / len(self.dataset[phase])
-            self.trainInfo[f'epoch_{phase}_loss'].append(epoch_loss)
+        # ------ Finished the whole training epoch ------
+        epoch_loss = running_loss / len(self.dataset['train'])
+        self.trainInfo[f'epoch_train_loss'].append(epoch_loss)
             
-            print(f'\t{phase} avg_chi2: {epoch_loss:.2f}', end='')
+        print(f'\ttrain avg_chi2: {epoch_loss:.2f}', end='')
 
-            if phase == 'train':
-                self.scheduler.step()
-            
-            if phase == 'valid':
-                if epoch_loss < self.min_valid_loss: # -> deep copy the model
-                    self.best_epochID = self.curr_epochID
-                    self.min_valid_loss = epoch_loss
-                    self.best_model_wts = copy.deepcopy(self.model.state_dict())
-            
-        # ------ End training the ephch in both train & valid phases ------
         self.trainInfo['lr'].append(self.scheduler.get_last_lr()[0]) # save lr / epoch
+        
+        self.scheduler.step()
+
+
+    def _valid_one_epoch(self):
+
+        self.model.eval()
+
+        running_loss = 0.0
+        for i, (_, inputs, labels) in enumerate(self.dataloader['valid']):
+            
+            inputs = inputs.to(self.device)
+            labels = labels.to(self.device)
+
+            with torch.no_grad():
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, labels)
+
+            self.trainInfo['valid_loss'].append( loss.item()/inputs.size(0) )
+
+            running_loss += loss.item()
+
+        # ------ Finished the whole validating epoch ------
+        epoch_loss = running_loss / len(self.dataset['valid'])
+        self.trainInfo['epoch_valid_loss'].append(epoch_loss)
+        
+        print(f'\tvalid avg_chi2: {epoch_loss:.2f}', end='')
+
+        if epoch_loss < self.min_valid_loss: # -> deep copy the model
+            self.best_epochID = self.curr_epochID
+            self.min_valid_loss = epoch_loss
+            self.best_model_wts = copy.deepcopy(self.model.state_dict())
+
+
 
     def train(self):
 
@@ -137,7 +153,10 @@ class MLP_Emulator(BaseTrainer):
             print(f'--- Epoch {epochID+1}/{self.num_epochs} ---')
             
             since = time.time()
+
             self._train_one_epoch()
+            self._valid_one_epoch()
+
             self._save_checkpoint(epochID)
 
             time_cost = time.time() - since
@@ -212,8 +231,10 @@ class MLP_Emulator(BaseTrainer):
         mask = mask_float.astype(bool)
 
         self.cov_masked = cov_full[mask][:, mask]
+        self.cov_cut = self.cov_masked[self.startID:self.endID][:, self.startID:self.endID]
 
-        self.L = np.linalg.cholesky(self.cov_masked)
+        self.L = np.linalg.cholesky(self.cov_cut)
+
         self.invL = np.linalg.inv(self.L)
 
     def gen_dataV(self, pco):
