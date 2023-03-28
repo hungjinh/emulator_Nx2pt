@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from emu_Nx2pt.base import BaseTrainer
 from emu_Nx2pt.utils import ChiSquare, display_layer_dimensions
 from emu_Nx2pt.models.mlp import MLP
+from emu_Nx2pt.models.mlp_res import MLP_Res
 
 import torch
 import torch.nn as nn
@@ -62,7 +63,12 @@ class MLP_Emulator(BaseTrainer):
         self.input_size = pco.shape[1]
     
     def _build_model(self, file_model_state=None):
-        self.model = MLP(self.input_size, self.output_size, self.Nblocks, self.hidden_size).to(self.device)
+        
+        if self.model_type == 'MLP':
+            self.model = MLP(self.input_size, self.output_size, self.hidden_size, self.Nblocks, self.is_batchNorm).to(self.device)
+        elif self.model_type == 'MLP_Res':
+            self.model = MLP_Res(self.input_size, self.output_size, self.hidden_size, self.Nblocks, self.is_batchNorm, self.scale_factor).to(self.device)
+
 
         print('\n------ Build Model ------\n')
         print(self.model, '\n')
