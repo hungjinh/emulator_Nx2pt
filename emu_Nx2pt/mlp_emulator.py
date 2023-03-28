@@ -58,11 +58,11 @@ class MLP_Emulator(BaseTrainer):
         '''Getting the dimensions of inputs and outputs from the training examples'''
         validSamples = iter(self.dataloader['valid'])
         _, pco, datav = validSamples.next()
-        self.Nout = len(datav[0])
-        self.Npco = pco.shape[1]
+        self.output_size = len(datav[0])
+        self.input_size = pco.shape[1]
     
     def _build_model(self, file_model_state=None):
-        self.model = MLP(self.Npco, self.Nout, self.Nblocks, self.Nhidden).to(self.device)
+        self.model = MLP(self.input_size, self.output_size, self.Nblocks, self.hidden_size).to(self.device)
 
         print('\n------ Build Model ------\n')
         print(self.model, '\n')
