@@ -8,8 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from emu_Nx2pt.base import BaseTrainer
 from emu_Nx2pt.utils import ChiSquare, display_layer_dimensions
-from emu_Nx2pt.models.mlp import MLP
-from emu_Nx2pt.models.mlp_res import MLP_Res
+from emu_Nx2pt.models.mlp import MLP, MLP_Res
 
 import torch
 import torch.nn as nn

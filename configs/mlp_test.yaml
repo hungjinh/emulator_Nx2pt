@@ -24,7 +24,7 @@ endID        : 2425      # 3x2pt: 2425  / full 10x2pt: 3132
 model_type   : 'MLP_Res'  # 'MLP' or 'MLP_Res'
 hidden_size  : 512        # the dimension of each middle network block
 Nblocks      : 1          # number of middle network blocks
-is_batchNorm : False
+is_batchNorm : True
 scale_factor : 1
 
 num_epochs : 10     # (100)
