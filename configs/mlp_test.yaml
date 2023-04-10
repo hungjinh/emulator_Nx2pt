@@ -21,10 +21,10 @@ file_model_state : null  # null if training from scratch
 startID      : 0         # specify the ID range [startID, endID) of the 10x2p dataT used in training
 endID        : 2425      # 3x2pt: 2425  / full 10x2pt: 3132 
 
-model_type   : 'MLP'  # 'MLP' or 'MLP_Res'
-hidden_size  : 128        # the dimension of each middle network block
-Nblocks      : 2          # number of middle network blocks
-is_batchNorm : True
+model_type   : 'MLP_Res'  # 'MLP' or 'MLP_Res'
+hidden_size  : 512        # the dimension of each middle network block
+Nblocks      : 1          # number of middle network blocks
+is_batchNorm : False
 scale_factor : 1
 
 num_epochs : 10     # (100)

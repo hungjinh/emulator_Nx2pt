@@ -23,9 +23,9 @@ class ResBN_Block(nn.Module):
         identity = self.skip_layer(x)
 
         o = F.relu(self.bn1(self.layer1(x)))
-        residual = F.relu(self.bn2(self.layer2(o)))
+        residual = self.bn2(self.layer2(o))
 
-        return identity + residual * self.scale_factor
+        return F.relu(identity + residual * self.scale_factor)
 
 class Res_Block(nn.Module):
 
@@ -47,9 +47,9 @@ class Res_Block(nn.Module):
         identity = self.skip_layer(x)
 
         o = F.relu(self.layer1(x))
-        residual = F.relu(self.layer2(o))
+        residual = self.layer2(o)
 
-        return identity + residual * self.scale_factor
+        return F.relu(identity + residual * self.scale_factor)
 
 class MLP_Res(nn.Module):
 
