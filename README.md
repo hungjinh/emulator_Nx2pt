@@ -1,5 +1,5 @@
 # Nx2pt Emulator
 
-Working project for building Nx2pt emulators. 
+Building Nx2pt emulators to accelerate cosmological inference pipeline. 
 
 [Simple MLP Network Training Logs](./docs/training_logs_MLP.md)

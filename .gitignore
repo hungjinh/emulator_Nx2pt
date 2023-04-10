@@ -9,6 +9,7 @@ configs/*
 
 notebooks/*
 !notebooks/tools
+!notebooks/demo
 
 # Compiled source
 *.o
