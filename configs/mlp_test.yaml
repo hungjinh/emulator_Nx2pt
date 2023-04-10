@@ -3,7 +3,7 @@ exp_name     : mlp_test
 cuda         : True
 ngpu         : 1
 gpu_device   : 0
-workers      : 8
+workers      : 16
 
 dir_output   : /home/hhg/Research/emu_Nx2pt/repo/emulator_Nx2pt/experiments
 
@@ -21,11 +21,14 @@ file_model_state : null  # null if training from scratch
 startID      : 0         # specify the ID range [startID, endID) of the 10x2p dataT used in training
 endID        : 2425      # 3x2pt: 2425  / full 10x2pt: 3132 
 
-Nhidden      : 64        # the dimension of each middle network block
-Nblocks      : 2         # number of middle network blocks
+model_type   : 'MLP_Res'  # 'MLP' or 'MLP_Res'
+hidden_size  : 512        # the dimension of each middle network block
+Nblocks      : 1          # number of middle network blocks
+is_batchNorm : True
+scale_factor : 1
 
 num_epochs : 10     # (100)
-batch_size : 128    # (64)
+batch_size : 256    # (64)
 lr         : 0.001           # Learning rate
 beta1      : 0.5             # Beta1 hyperparam for Adam optimizers
 beta2      : 0.999           # Beta2 hyperparam for Adam optimizers

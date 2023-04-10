@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from emu_Nx2pt.base import BaseTrainer
 from emu_Nx2pt.utils import ChiSquare, display_layer_dimensions
-from emu_Nx2pt.models.mlp import MLP
+from emu_Nx2pt.models.mlp import MLP, MLP_Res
 
 import torch
 import torch.nn as nn
@@ -58,11 +58,16 @@ class MLP_Emulator(BaseTrainer):
         '''Getting the dimensions of inputs and outputs from the training examples'''
         validSamples = iter(self.dataloader['valid'])
         _, pco, datav = validSamples.next()
-        self.Nout = len(datav[0])
-        self.Npco = pco.shape[1]
+        self.output_size = len(datav[0])
+        self.input_size = pco.shape[1]
     
     def _build_model(self, file_model_state=None):
-        self.model = MLP(self.Npco, self.Nout, self.Nblocks, self.Nhidden).to(self.device)
+        
+        if self.model_type == 'MLP':
+            self.model = MLP(self.input_size, self.output_size, self.hidden_size, self.Nblocks, self.is_batchNorm).to(self.device)
+        elif self.model_type == 'MLP_Res':
+            self.model = MLP_Res(self.input_size, self.output_size, self.hidden_size, self.Nblocks, self.is_batchNorm, self.scale_factor).to(self.device)
+
 
         print('\n------ Build Model ------\n')
         print(self.model, '\n')
