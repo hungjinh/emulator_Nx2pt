@@ -1,5 +1,5 @@
 import torch.nn as nn
-from emu_Nx2pt.models.blocks import ResBN_Block, Res_Block
+from emu_Nx2pt.models.blocks import ResBN_Block, Res_Block, MultiHeadAttention, Reshape
 
 class MLP(nn.Module):
     
@@ -60,3 +60,26 @@ class MLP_Res(nn.Module):
         y = self.out_layer(x)
 
         return y
+
+class AttentionBasedMLP(nn.Module):
+
+    def __init__(self, input_size, output_size, hidden_size, d_embed):
+        super().__init__()
+
+        Nseq = hidden_size // d_embed
+        
+        self.model = nn.Sequential(
+                        nn.Linear(input_size, hidden_size), nn.ReLU(),
+                        nn.Linear(hidden_size, hidden_size), nn.ReLU(),
+                        nn.Reshap((Nseq, d_embed)),
+                        MultiHeadAttention(d_embed=d_embed, n_heads=2),
+                        MultiHeadAttention(d_embed=d_embed, n_heads=2),
+                        nn.Reshap((hidden_size, )),
+                        nn.Relu(),
+                        nn.Linear(hidden_size, output_size)
+                        )
+
+    
+    def forward(self, x):
+        
+        return self.model(x)
