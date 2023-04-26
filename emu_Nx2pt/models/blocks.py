@@ -11,7 +11,7 @@ class ResBN_Block(nn.Module):
 
         self.layer1 = nn.Linear(input_size, hidden_size)
         self.bn1    = nn.BatchNorm1d(hidden_size)
-        self.layer2 = nn.Linear(input_size, output_size)
+        self.layer2 = nn.Linear(hidden_size, output_size)
         self.bn2    = nn.BatchNorm1d(hidden_size)
 
         if input_size != output_size:
@@ -36,7 +36,7 @@ class Res_Block(nn.Module):
         self.scale_factor = scale_factor
 
         self.layer1 = nn.Linear(input_size, hidden_size)
-        self.layer2 = nn.Linear(input_size, output_size)
+        self.layer2 = nn.Linear(hidden_size, output_size)
 
         if input_size != output_size:
             self.skip_layer = nn.Linear(input_size, output_size, bias=False)
