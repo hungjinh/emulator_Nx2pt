@@ -21,10 +21,10 @@ file_model_state : null  # null if training from scratch
 startID      : 0         # specify the ID range [startID, endID) of the 10x2p dataT used in training
 endID        : 2425      # 3x2pt: 2425  / full 10x2pt: 3132 
 
-model_type   : 'ParallelMicroNets'  # Model choices: 'MLP', 'MLP_Res', 'ParallelMicroNets'
-output_size  : [1375, 800, 250]     # e.g. 3x2pt: 2425 | 10x2pt: 3132 | [2425, 707] or [1375, 800, 250] for ParallelMicroNets
-hidden_size  : 32         # the dimension of each middle network block
-encode_size  : 32
+model_type   : 'MLP_Res'  # Model choices: 'MLP', 'MLP_Res', 'ParallelMicroNets'
+output_size  : 2425       # e.g. 3x2pt: 2425 | 10x2pt: 3132 | [2425, 707] or [1375, 800, 250] for ParallelMicroNets
+hidden_size  : 512        # the dimension of each middle network block
+encode_size  : null
 Nblocks      : 1          # number of middle network blocks
 is_batchNorm : False
 scale_factor : 1
