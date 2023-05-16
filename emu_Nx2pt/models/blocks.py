@@ -54,30 +54,30 @@ class Res_Block(nn.Module):
 
 class MultiHeadAttention(nn.Module):
 
-    def __init__(self, d_embed, n_heads):
+    def __init__(self, embed_dim, num_heads):
         super().__init__()
-        self.d_embed = d_embed # embedded dimension for each token in a sequence
-        self.n_heads = n_heads
+        self.embed_dim = embed_dim  # embedded dimension for each token in a sequence
+        self.num_heads = num_heads
 
-        assert d_embed % n_heads == 0, f"Can't divide dimension {d_embed} into {n_heads} heads"
+        assert embed_dim % num_heads == 0, f"Can't divide dimension {embed_dim} into {num_heads} heads"
 
-        d_head = int(d_embed / n_heads)
+        d_head = int(embed_dim / num_heads)
 
-        self.Wq = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.n_heads)])
-        self.Wk = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.n_heads)])
-        self.Wv = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.n_heads)])
+        self.Wq = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.num_heads)])
+        self.Wk = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.num_heads)])
+        self.Wv = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.num_heads)])
         self.d_head = d_head
         self.softmax = nn.Softmax(dim=-1)
     
     def forward(self, sequences):
-        # Sequences has shape (N, seq_length, d_embed), where d_embed = token dimension
+        # Sequences has shape (N, seq_length, embed_dim), where embed_dim = token dimension
         result = []
         for sequence in sequences:
             seq_result = []
-            for head in range(self.n_heads):
-                Wq = self.q_mappings[head]
-                Wk = self.k_mappings[head]
-                Wv = self.k_mappings[head]
+            for head in range(self.num_heads):
+                Wq = self.Wq[head]
+                Wk = self.Wk[head]
+                Wv = self.Wv[head]
 
                 seq = sequence[:, head * self.d_head: (head + 1) * self.d_head]
                 q, k, v = Wq(seq), Wk(seq), Wv(seq)
@@ -88,9 +88,28 @@ class MultiHeadAttention(nn.Module):
         return torch.cat([torch.unsqueeze(r, dim=0) for r in result])
 
 
+class TransformerEncoderBlock(nn.Module):
+    def __init__(self, embed_dim, num_heads, mlp_ratio=4):
+        super().__init__()
+
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.mhsa = MultiHeadAttention(embed_dim, num_heads)
+        self.norm2 = nn.LayerNorm(embed_dim)
+        self.mlp = nn.Sequential(
+            nn.Linear(embed_dim, mlp_ratio * embed_dim),
+            nn.GELU(),
+            nn.Linear(mlp_ratio * embed_dim, embed_dim)
+        )
+    
+    def forward(self, x):
+        out = x + self.mhsa(self.norm1(x))
+        out = out + self.mlp(self.norm2(out))
+        return out
+
+
 class Reshape(nn.Module):
     def __init__(self, shape):
-        super(Reshape, self).__init__()
+        super().__init__()
         self.shape = shape
 
     def forward(self, x):

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from emu_Nx2pt.models.blocks import ResBN_Block, Res_Block, MultiHeadAttention, Reshape
+from emu_Nx2pt.models.blocks import ResBN_Block, Res_Block
+from emu_Nx2pt.models.blocks import TransformerEncoderBlock, Reshape
 
 class MLP(nn.Module):
     
@@ -111,23 +112,62 @@ class ParallelMicroNets(nn.Module):
 
 class AttentionBasedMLP(nn.Module):
 
-    def __init__(self, input_size, output_size, hidden_size, d_embed):
+    def __init__(self, input_size, output_size, hidden_sizes, Nblocks, Nseq, num_heads=2, mlp_ratio=4, scale_factor=1):
+        '''
+        Args:
+            hidden_sizes: hidden_sizes of the ResNet block and the TransformerEncoder block
+                e.g. hidden_sizes = [512, 1024]
+            Nblocks: number of blocks for the ResNet and the TransformerEncoder
+                e.g. Nblocks = [2, 1]
+        '''
         super().__init__()
-
-        Nseq = hidden_size // d_embed
         
-        self.model = nn.Sequential(
-                        nn.Linear(input_size, hidden_size), nn.ReLU(),
-                        nn.Linear(hidden_size, hidden_size), nn.ReLU(),
-                        nn.Reshap((Nseq, d_embed)),
-                        MultiHeadAttention(d_embed=d_embed, n_heads=2),
-                        MultiHeadAttention(d_embed=d_embed, n_heads=2),
-                        nn.Reshap((hidden_size, )),
-                        nn.Relu(),
-                        nn.Linear(hidden_size, output_size)
-                        )
+        self.Nseq = Nseq
+        self.hidden_Res, self.hidden_Trans = hidden_sizes
+        self.embed_dim = self.hidden_Trans // Nseq
+        
+        self.Nblocks_Res, self.Nblocks_TE = Nblocks
 
+        self.in_layer = nn.Sequential(nn.Linear(input_size, self.hidden_Res), nn.ReLU())
+
+        self.res_layers = nn.ModuleDict()
+        for i in range(self.Nblocks_Res):
+            self.res_layers[f"block_{i}"] = Res_Block(
+                self.hidden_Res, self.hidden_Res, self.hidden_Res, scale_factor)
+        
+        self.mid_layer = nn.Sequential(nn.Linear(self.hidden_Res, self.hidden_Trans), nn.ReLU())
+        
+        self.trans_layers = nn.ModuleDict()
+        for i in range(self.Nblocks_TE):
+            self.trans_layers[f"block_{i}"] = TransformerEncoderBlock(self.embed_dim, num_heads, mlp_ratio)
+        
+        self.out_layer = nn.Linear(self.hidden_Trans, output_size)
+
+        # self.model = nn.Sequential(
+        #                 nn.Linear(input_size, hidden_size), nn.ReLU(),
+        #                 nn.Linear(hidden_size, hidden_size), nn.ReLU(),
+        #                 Reshape((Nseq, embed_dim)),
+        #                 TransformerEncoderBlock(embed_dim, num_heads, mlp_ratio),
+        #                 Reshape((hidden_size, )),
+        #                 nn.Linear(hidden_size, output_size)
+        #                 )
     
     def forward(self, x):
+
+        x = self.in_layer(x)
+
+        for i in range(self.Nblocks_Res):
+            x = self.res_layers[f"block_{i}"](x)
         
-        return self.model(x)
+        x = self.mid_layer(x)
+        
+        x = x.view(x.size(0), self.Nseq, self.embed_dim)
+
+        for i in range(self.Nblocks_TE):
+            x = self.trans_layers[f"block_{i}"](x)
+        
+        x = x.view(x.size(0), self.hidden_Trans)
+
+        y = self.out_layer(x)
+
+        return y
