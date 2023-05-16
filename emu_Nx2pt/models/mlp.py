@@ -143,14 +143,6 @@ class AttentionBasedMLP(nn.Module):
         
         self.out_layer = nn.Linear(self.hidden_Trans, output_size)
 
-        # self.model = nn.Sequential(
-        #                 nn.Linear(input_size, hidden_size), nn.ReLU(),
-        #                 nn.Linear(hidden_size, hidden_size), nn.ReLU(),
-        #                 Reshape((Nseq, embed_dim)),
-        #                 TransformerEncoderBlock(embed_dim, num_heads, mlp_ratio),
-        #                 Reshape((hidden_size, )),
-        #                 nn.Linear(hidden_size, output_size)
-        #                 )
     
     def forward(self, x):
 

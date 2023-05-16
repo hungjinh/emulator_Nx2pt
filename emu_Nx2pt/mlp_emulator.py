@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from emu_Nx2pt.base import BaseTrainer
 from emu_Nx2pt.utils import ChiSquare, display_layer_dimensions
-from emu_Nx2pt.models.mlp import MLP, MLP_Res, ParallelMicroNets
+from emu_Nx2pt.models.mlp import MLP, MLP_Res, ParallelMicroNets, AttentionBasedMLP
 
 import torch
 import torch.nn as nn
@@ -69,6 +69,8 @@ class MLP_Emulator(BaseTrainer):
             self.model = MLP_Res(self.input_size, self.output_size, self.hidden_size, self.Nblocks, self.is_batchNorm, self.scale_factor).to(self.device)
         elif self.model_type == 'ParallelMicroNets':
             self.model = ParallelMicroNets(self.input_size, self.encode_size, self.hidden_size, self.output_size, self.Nblocks, self.scale_factor).to(self.device)
+        elif self.model_type == 'AttentionBasedMLP':
+            self.model = AttentionBasedMLP(self.input_size, self.output_size, self.hidden_size, self.Nblocks, self.Nseq, self.num_heads, self.mlp_ratio, self.scale_factor).to(self.device)
 
 
         print('\n------ Build Model ------\n')
@@ -234,10 +236,16 @@ class MLP_Emulator(BaseTrainer):
             np.array: emulated decorrelated dataT 
         '''
 
+        if len(pco.shape) == 1:
+            pco = pco.view((1, -1))
+
         with torch.no_grad():
             emu_dataT = self.model(pco).to('cpu').numpy()
         
-        return emu_dataT
+        if emu_dataT.shape[0]==1:
+            return emu_dataT[0]
+        else:
+            return emu_dataT
     
     def compute_L(self):
         with open(self.file_cov, 'rb') as handle:
