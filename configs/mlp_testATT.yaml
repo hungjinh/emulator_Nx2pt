@@ -1,0 +1,46 @@
+exp_name     : mlp_test
+
+cuda         : True
+ngpu         : 1
+gpu_device   : 0
+workers      : 16
+
+dir_output   : /home/hhg/Research/emu_Nx2pt/repo/emulator_Nx2pt/experiments
+
+dir_dataT :
+    train : /home/hhg/Research/emu_Nx2pt/data/dataT_1M/
+    valid : /home/hhg/Research/emu_Nx2pt/data/dataT_0.1M/
+
+file_pco :
+    train : /home/hhg/Research/emu_Nx2pt/data/pco_1M.pkl    # training pco points on lhs
+    valid : /home/hhg/Research/emu_Nx2pt/data/pco_0.1M.pkl
+
+#file_model_state : /home/hhg/Research/emu_Nx2pt/repo/emulator_Nx2pt/experiments/mlp_run0/trainInfo.pkl  # null if training from scratch
+file_model_state : null  # null if training from scratch
+
+startID      : 0         # specify the ID range [startID, endID) of the 10x2p dataT used in training
+endID        : 2425      # 3x2pt: 2425  / full 10x2pt: 3132 
+
+model_type   : 'AttentionBasedMLP'  # Model choices: 'MLP', 'MLP_Res', 'ParallelMicroNets', 'AttentionBasedMLP'
+output_size  : 2425       # e.g. 3x2pt: 2425 | 10x2pt: 3132 
+hidden_size  : [256, 512]  # the dimension of each middle network block
+encode_size  : null
+Nblocks      : [2, 1]       # number of middle network blocks
+Nseq         : 32
+num_heads    : 2
+mlp_ratio    : 2
+is_batchNorm : False
+scale_factor : 1
+
+num_epochs : 10     # (100)
+batch_size : 128    # (64)
+lr         : 0.001           # Learning rate
+beta1      : 0.5             # Beta1 hyperparam for Adam optimizers
+beta2      : 0.999           # Beta2 hyperparam for Adam optimizers
+
+step_size  : 10              # period of learning rate decay 
+gamma      : 0.1             # multiplicative factor of learning rate decay
+early_stop_threshold : 10    # auto stop when the valid_loss doesn't improve anymore for <early_stop_threshold> epochs.
+
+file_cov   : /home/hhg/Research/emu_Nx2pt/data/cov3500.pkl
+file_mask  : /home/hhg/Research/emu_Nx2pt/data/10x2pt_RomanxSO_fid_mask.txt
