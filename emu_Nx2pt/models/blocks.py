@@ -54,7 +54,7 @@ class Res_Block(nn.Module):
 
 class MultiHeadAttention(nn.Module):
 
-    def __init__(self, embed_dim, num_heads):
+    def __init__(self, embed_dim, num_heads, bias=False):
         super().__init__()
         self.embed_dim = embed_dim  # embedded dimension for each token in a sequence
         self.num_heads = num_heads
@@ -63,9 +63,10 @@ class MultiHeadAttention(nn.Module):
 
         d_head = int(embed_dim / num_heads)
 
-        self.Wq = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.num_heads)])
-        self.Wk = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.num_heads)])
-        self.Wv = nn.ModuleList([nn.Linear(d_head, d_head) for _ in range(self.num_heads)])
+        self.Wq = nn.ModuleList([nn.Linear(d_head, d_head, bias=bias) for _ in range(self.num_heads)])
+        self.Wk = nn.ModuleList([nn.Linear(d_head, d_head, bias=bias) for _ in range(self.num_heads)])
+        self.Wv = nn.ModuleList([nn.Linear(d_head, d_head, bias=bias) for _ in range(self.num_heads)])
+        self.Wo = nn.Linear(embed_dim, embed_dim, bias=bias)
         self.d_head = d_head
         self.softmax = nn.Softmax(dim=-1)
     
@@ -85,7 +86,8 @@ class MultiHeadAttention(nn.Module):
                 attention = self.softmax(q @ k.T / (self.d_head ** 0.5))
                 seq_result.append(attention @ v)
             result.append(torch.hstack(seq_result))
-        return torch.cat([torch.unsqueeze(r, dim=0) for r in result])
+        out_concat = torch.cat([torch.unsqueeze(r, dim=0) for r in result])
+        return self.Wo(out_concat)
 
 
 class TransformerEncoderBlock(nn.Module):
