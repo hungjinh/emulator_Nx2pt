@@ -26,11 +26,13 @@ output_size  : 2425       # e.g. 3x2pt: 2425 | 10x2pt: 3132
 hidden_size  : [256, 512]  # the dimension of each middle network block
 encode_size  : null
 Nblocks      : [2, 1]       # number of middle network blocks
+scale_factor : 1
+is_batchNorm : False
 Nseq         : 32
 num_heads    : 2
 mlp_ratio    : 2
-is_batchNorm : False
-scale_factor : 1
+dropout_p    : 0.
+bias         : False
 
 num_epochs : 10     # (100)
 batch_size : 128    # (64)

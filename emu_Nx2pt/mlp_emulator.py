@@ -70,7 +70,7 @@ class MLP_Emulator(BaseTrainer):
         elif self.model_type == 'ParallelMicroNets':
             self.model = ParallelMicroNets(self.input_size, self.encode_size, self.hidden_size, self.output_size, self.Nblocks, self.scale_factor).to(self.device)
         elif self.model_type == 'AttentionBasedMLP':
-            self.model = AttentionBasedMLP(self.input_size, self.output_size, self.hidden_size, self.Nblocks, self.Nseq, self.num_heads, self.mlp_ratio, self.scale_factor).to(self.device)
+            self.model = AttentionBasedMLP(self.input_size, self.output_size, self.hidden_size, self.Nblocks, self.Nseq, self.num_heads, self.mlp_ratio, self.dropout_p, self.bias, self.scale_factor).to(self.device)
 
 
         print('\n------ Build Model ------\n')

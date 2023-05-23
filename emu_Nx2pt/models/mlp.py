@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from emu_Nx2pt.models.blocks import ResBN_Block, Res_Block
-from emu_Nx2pt.models.blocks import TransformerEncoderBlock, Reshape
+from emu_Nx2pt.models.blocks import TransformerEncoderBlock
 
 class MLP(nn.Module):
     
@@ -112,7 +112,7 @@ class ParallelMicroNets(nn.Module):
 
 class AttentionBasedMLP(nn.Module):
 
-    def __init__(self, input_size, output_size, hidden_sizes, Nblocks, Nseq, num_heads=2, mlp_ratio=4, scale_factor=1):
+    def __init__(self, input_size, output_size, hidden_sizes, Nblocks, Nseq, num_heads=2, mlp_ratio=2, dropout_p=0., bias=True, scale_factor=1):
         '''
         Args:
             hidden_sizes: hidden_sizes of the ResNet block and the TransformerEncoder block
@@ -123,23 +123,22 @@ class AttentionBasedMLP(nn.Module):
         super().__init__()
         
         self.Nseq = Nseq
+        self.num_heads = num_heads
         self.hidden_Res, self.hidden_Trans = hidden_sizes
-        self.embed_dim = self.hidden_Trans // Nseq
-        
         self.Nblocks_Res, self.Nblocks_TE = Nblocks
+        self.embed_dim = self.hidden_Trans // Nseq
 
         self.in_layer = nn.Sequential(nn.Linear(input_size, self.hidden_Res), nn.ReLU())
 
         self.res_layers = nn.ModuleDict()
         for i in range(self.Nblocks_Res):
-            self.res_layers[f"block_{i}"] = Res_Block(
-                self.hidden_Res, self.hidden_Res, self.hidden_Res, scale_factor)
+            self.res_layers[f"block_{i}"] = Res_Block(self.hidden_Res, self.hidden_Res, self.hidden_Res, scale_factor)
         
         self.mid_layer = nn.Sequential(nn.Linear(self.hidden_Res, self.hidden_Trans), nn.ReLU())
         
-        self.trans_layers = nn.ModuleDict()
+        self.transf_layers = nn.ModuleDict()
         for i in range(self.Nblocks_TE):
-            self.trans_layers[f"block_{i}"] = TransformerEncoderBlock(self.embed_dim, num_heads, mlp_ratio)
+            self.transf_layers[f"block_{i}"] = TransformerEncoderBlock(self.embed_dim, num_heads, mlp_ratio, dropout_p, bias)
         
         self.out_layer = nn.Linear(self.hidden_Trans, output_size)
 
@@ -153,12 +152,14 @@ class AttentionBasedMLP(nn.Module):
         
         x = self.mid_layer(x)
         
-        x = x.view(x.size(0), self.Nseq, self.embed_dim)
+        x = x.reshape(x.shape[0], self.Nseq, self.embed_dim)
 
+        self.atten_weights = [None] * self.Nblocks_TE
         for i in range(self.Nblocks_TE):
-            x = self.trans_layers[f"block_{i}"](x)
+            x = self.transf_layers[f"block_{i}"](x)
+            self.atten_weights[i] = self.transf_layers[f"block_{i}"].mha.attention.attn_weights.reshape(-1, self.num_heads, self.Nseq, self.Nseq)
         
-        x = x.view(x.size(0), self.hidden_Trans)
+        x = x.reshape(x.shape[0], self.hidden_Trans)
 
         y = self.out_layer(x)
 
