@@ -6,7 +6,7 @@ experiments/*
 
 configs/*
 !configs/mlp_test.yaml
-!configs/mlp_testATT.yaml
+!configs/mlpATT_test.yaml
 
 notebooks/*
 !notebooks/tools
